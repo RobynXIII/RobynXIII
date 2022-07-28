@@ -1,4 +1,4 @@
-- 👋 Hi, I’m @RobynXIII
+- 👋 Hi, I’m Rob.
 - 👀 I’m interested in learning Java, C, and C++
 - 🌱 I’m currently learning Java.
 - 💞️ I’m looking to collaborate on begineer-level projects
