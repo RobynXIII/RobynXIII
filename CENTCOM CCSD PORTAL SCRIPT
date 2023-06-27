@@ -1,0 +1,47 @@
+# loading necessary assemblies
+
+using assembly Microsoft.VisualBasic;
+using assembly System.Net.Http;
+using assembly System.Windows.Forms;
+using assembly System.Console;
+using assembly System.IO;
+
+# Clears Console
+try{
+    clear;
+    [System.Console]::Clear()}
+    
+}
+catch{};
+
+# Patterns assigned to variables to be used REGEX
+# in order to parse web page for possible parent circuit(s)
+# and/or child circuit(s)
+
+$ccsdPattern = "class=rowLight >(.*?)</td>";
+$childCCSDPattern = "<div ID='TV(.*?)0chlds'><IMG";
+$childCCSDPattern2 = "inpCCSD=(*.?)'";
+$parentCCSDPattern = "rides the following circuit";
+
+# Arrays used to hold valid/invalid circuits for final output
+# the $checked CCSDs array is to make sure that no CCSDs are checked twice
+
+$validArray = [System.Collections.Generic.List[System.Object]]@();
+$invalidArray =  [System.Collections.Generic.List[System.Object]]@();
+$checkedCCSDs = [System.Collections.Generic.List[System.Object]]@();
+
+# This is for selecting the text file with the CCSDs to be used as reference
+
+$fileBrowser = [System.Windows.Forms.OpenFileDialog]::new();
+
+[void]$fileBrowser.ShowDialog();
+
+# If statement for when the sure selects 'Cancel'
+
+if($fileBrowser.FileName -eq ''){
+    [System.Console]::BackgroundColor="Gray";
+    [System.Console]::ForegroundColor="Red";
+    [System.Console]::WriteLine("`r`nOperation was cancelled by user.`r`n");
+    [System.Console]::BackgroundColor="DarkMagenta";
+    [System.Console]::ForegroundColor="White";
+}
