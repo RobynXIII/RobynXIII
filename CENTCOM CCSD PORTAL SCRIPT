@@ -44,4 +44,36 @@ if($fileBrowser.FileName -eq ''){
     [System.Console]::WriteLine("`r`nOperation was cancelled by user.`r`n");
     [System.Console]::BackgroundColor="DarkMagenta";
     [System.Console]::ForegroundColor="White";
-}
+    break
+};
+
+# ElseIf statement for when the uer selects a file other than a text file
+
+elseif ($fileBrowser.FileName -notmatch '.txt$'){
+    [System.Console]::BackgroundColor="Gray";
+    [System.Console]::ForegroundColor="Red";
+    [System.Console]::WriteLine("`r`nInvalid File Type`r`n");
+    [System.Console]::BackgroundColor="DarkMagenta";
+    [System.Console]::ForegroundColor="White";
+    break
+};
+
+# Try/Catch in case the previous ElseIf block did not catch the invalid file
+# Also creates a definitive list that removes duplicates from the original
+
+try{
+$rawCCSDList = [System.Collections.Generic.List[System.Object]]([System.IO.File]::ReadAllLines(
+$fileBrowser.FileName));
+$rawCCSDList.TrimExcess();
+$ccsdList = $rawCCSDList | select -Unique
+[int]$ccsdCount = $ccsdList.count;}
+catch{
+    [System.Console]::BackgroundColor="Gray";
+    [System.Console]::ForegroundColor="Red";
+    [System.Console]::WriteLine("`r`nInvalid File Type`r`n");
+    [System.Console]::BackgroundColor="DarkMagenta";
+    [System.Console]::ForegroundColor="White";
+    break
+};
+
+
