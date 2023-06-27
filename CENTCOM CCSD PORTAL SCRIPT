@@ -76,4 +76,19 @@ catch{
     break
 };
 
+# HttpClient and Client Handler used to send web requests back and forth to CENTCOM server #
 
+$httpClientHandler = [System.Net.Http.HttpClientHandler]::new();
+$httpClientHandler.SslProtocol = 'Tls12';
+$httpClientHandler.ClientCertificateOptions = 'Automatic';
+$httpClient = [System.Net.Http.HttpClient]::new($httpClientHandler);
+$webPortal = "PLACE WEB ADDRESS HERE"
+
+# First request sent to webportal using the client via GetAsync Method and collaing the Result property from the Response;
+# then putting the result from the response into a variable <$httpResponse>
+
+$httpResponse = $httpClient.etAsync($webPortal).Result;
+
+# Creating a GET request using the uri sent from the previous reponse
+
+$httpRequest = [System.Net.Http.HttpRequestMessage]::new('GET', $httpResponse.RequestMessage.RequestUri.AbsoluteUri);
