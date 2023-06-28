@@ -92,3 +92,22 @@ $httpResponse = $httpClient.etAsync($webPortal).Result;
 # Creating a GET request using the uri sent from the previous reponse
 
 $httpRequest = [System.Net.Http.HttpRequestMessage]::new('GET', $httpResponse.RequestMessage.RequestUri.AbsoluteUri);
+
+# Parsing "LastMRH" header from server response and adding to $httpRequest object
+# This is one of two headers that need to be exchanged with every request/response handshake for authentication
+
+$httpRequest.Headers.Add(
+($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[0],
+($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[1]
+);
+
+# This is the second header, 'MRHSession', to be added tto $httpRequest
+
+$httpRequest.Headers.Add(
+($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[0],
+($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[1]
+);
+
+# Second request sent to $webportal with 'LastMRH' and 'MRH' headers
+
+$httpResponse = $httpClient.SendAsync($httpRequest).Result
