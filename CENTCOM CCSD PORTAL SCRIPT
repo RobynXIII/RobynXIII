@@ -9,9 +9,9 @@ using assembly System.IO;
 # Clears Console
 try{
     clear;
-    [System.Console]::Clear()}
-    
+    [System.Console]::Clear()
 }
+    
 catch{};
 
 # Patterns assigned to variables to be used REGEX
@@ -111,3 +111,70 @@ $httpRequest.Headers.Add(
 # Second request sent to $webportal with 'LastMRH' and 'MRH' headers
 
 $httpResponse = $httpClient.SendAsync($httpRequest).Result
+
+# Second $httpRequest object; using 'POST' instead of 'GET' beacuse data need to be sent
+# to the server to get a specific response
+
+$httpRequest = [System.Net.Http.HttpRequestMessage]::new('POST',$httpResponse.RequestMessage.RequestUri.AbsoluteUri);
+
+# adding LastMRH Header
+
+$httpRequest.Headers.Add(
+($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[0],
+($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[1]
+);
+
+# adding MRHSession header
+
+$httpRequest.Headers.Add(
+($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[0],
+($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[1]
+);
+
+# creating $httpContent object with payload to send data to server necessary to proceed
+
+$body = 'choice=1';
+$httpContent = [System.Net.Http.StringContent]::new(
+$body,
+[System.Text.Encoding]::UTF8,
+'application/x-www-form-urlencoded'
+);
+
+# appending $httpContent to $httpRequest
+
+$httpRequest.Content = $httpContent;
+
+# Sending POST request that will active JS within webpage to prompt user for smart card pin
+
+$httpResponse = $httpClient.SendAsync($httpRequest);
+
+# My attempt to have the console wait for the user to input pin (not sure how well it works yet)
+
+try{$httpResponse.wait()}
+catch{};
+
+# attempt at forcing script to resend request on failure (i.e. user took too long to enter PIN)
+
+if($httpResponse.Stats -eq 'Faulted'){
+do{
+[System.Console]::WriteLine("qrqnRequest timed out.`r`n`r`nRetrying...`r`n");
+sleep 2;
+$httpResponse = $httpClient.GetAsync($webPortal).Result;
+
+$httpRequest = [System.Net.Http.HttpRequestMessage]::new('GET',$httpResponse.RequestMessage.RequestUri.AbsoluteUri);
+
+$httpRequest.Headers.Add(
+($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[0],
+($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[1]
+);
+
+$httpRequest.Headers.Add(
+($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[0],
+($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[1]
+);
+
+}
+}
+
+
+until($httpResponse.Result.StatusCode -eq 'OK')
