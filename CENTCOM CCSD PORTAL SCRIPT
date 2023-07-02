@@ -87,7 +87,7 @@ $webPortal = "PLACE WEB ADDRESS HERE"
 # First request sent to webportal using the client via GetAsync Method and collaing the Result property from the Response;
 # then putting the result from the response into a variable <$httpResponse>
 
-$httpResponse = $httpClient.etAsync($webPortal).Result;
+$httpResponse = $httpClient.GetAsync($webPortal).Result;
 
 # Creating a GET request using the uri sent from the previous reponse
 
@@ -157,7 +157,7 @@ catch{};
 
 if($httpResponse.Stats -eq 'Faulted'){
 do{
-[System.Console]::WriteLine("qrqnRequest timed out.`r`n`r`nRetrying...`r`n");
+[System.Console]::WriteLine("`r`nRequest timed out.`r`n`r`nRetrying...`r`n");
 sleep 2;
 $httpResponse = $httpClient.GetAsync($webPortal).Result;
 
