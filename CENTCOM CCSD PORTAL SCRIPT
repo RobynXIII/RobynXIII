@@ -1,4 +1,4 @@
-# loading necessary assemblies
+## loading necessary assemblies
 
 using assembly Microsoft.VisualBasic;
 using assembly System.Net.Http;
@@ -6,7 +6,7 @@ using assembly System.Windows.Forms;
 using assembly System.Console;
 using assembly System.IO;
 
-# Clears Console
+## Clears Console
 try{
     clear;
     [System.Console]::Clear()
@@ -14,29 +14,29 @@ try{
     
 catch{};
 
-# Patterns assigned to variables to be used REGEX
-# in order to parse web page for possible parent circuit(s)
-# and/or child circuit(s)
+## Patterns assigned to variables to be used REGEX
+## in order to parse web page for possible parent circuit(s)
+## and/or child circuit(s)
 
 $ccsdPattern = "class=rowLight >(.*?)</td>";
 $childCCSDPattern = "<div ID='TV(.*?)0chlds'><IMG";
 $childCCSDPattern2 = "inpCCSD=(*.?)'";
 $parentCCSDPattern = "rides the following circuit";
 
-# Arrays used to hold valid/invalid circuits for final output
-# the $checked CCSDs array is to make sure that no CCSDs are checked twice
+## Arrays used to hold valid/invalid circuits for final output
+## the $checked CCSDs array is to make sure that no CCSDs are checked twice
 
 $validArray = [System.Collections.Generic.List[System.Object]]@();
 $invalidArray =  [System.Collections.Generic.List[System.Object]]@();
 $checkedCCSDs = [System.Collections.Generic.List[System.Object]]@();
 
-# This is for selecting the text file with the CCSDs to be used as reference
+## This is for selecting the text file with the CCSDs to be used as reference
 
 $fileBrowser = [System.Windows.Forms.OpenFileDialog]::new();
 
 [void]$fileBrowser.ShowDialog();
 
-# If statement for when the sure selects 'Cancel'
+## If statement for when the sure selects 'Cancel'
 
 if($fileBrowser.FileName -eq ''){
     [System.Console]::BackgroundColor="Gray";
@@ -47,7 +47,7 @@ if($fileBrowser.FileName -eq ''){
     break
 };
 
-# ElseIf statement for when the uer selects a file other than a text file
+## ElseIf statement for when the uer selects a file other than a text file
 
 elseif ($fileBrowser.FileName -notmatch '.txt$'){
     [System.Console]::BackgroundColor="Gray";
@@ -58,15 +58,15 @@ elseif ($fileBrowser.FileName -notmatch '.txt$'){
     break
 };
 
-# Try/Catch in case the previous ElseIf block did not catch the invalid file
-# Also creates a definitive list that removes duplicates from the original
+## Try/Catch in case the previous ElseIf block did not catch the invalid file
+## Also creates a definitive list that removes duplicates from the original
 
 try{
 $rawCCSDList = [System.Collections.Generic.List[System.Object]]([System.IO.File]::ReadAllLines(
-$fileBrowser.FileName));
-$rawCCSDList.TrimExcess();
-$ccsdList = $rawCCSDList | select -Unique
-[int]$ccsdCount = $ccsdList.count;}
+    $fileBrowser.FileName));
+    $rawCCSDList.TrimExcess();
+    $ccsdList = $rawCCSDList | select -Unique
+    [int]$ccsdCount = $ccsdList.count;}
 catch{
     [System.Console]::BackgroundColor="Gray";
     [System.Console]::ForegroundColor="Red";
@@ -76,7 +76,7 @@ catch{
     break
 };
 
-# HttpClient and Client Handler used to send web requests back and forth to CENTCOM server #
+## HttpClient and Client Handler used to send web requests back and forth to CENTCOM server 
 
 $httpClientHandler = [System.Net.Http.HttpClientHandler]::new();
 $httpClientHandler.SslProtocol = 'Tls12';
@@ -84,54 +84,56 @@ $httpClientHandler.ClientCertificateOptions = 'Automatic';
 $httpClient = [System.Net.Http.HttpClient]::new($httpClientHandler);
 $webPortal = "PLACE WEB ADDRESS HERE"
 
-# First request sent to webportal using the client via GetAsync Method and collaing the Result property from the Response;
-# then putting the result from the response into a variable <$httpResponse>
+## First request sent to webportal using the client via GetAsync Method and collaing the Result property from the Response;
+## then putting the result from the response into a variable <$httpResponse>
 
 $httpResponse = $httpClient.GetAsync($webPortal).Result;
 
-# Creating a GET request using the uri sent from the previous reponse
+## Creating a GET request using the uri sent from the previous reponse
 
-$httpRequest = [System.Net.Http.HttpRequestMessage]::new('GET', $httpResponse.RequestMessage.RequestUri.AbsoluteUri);
+$httpRequest = [System.Net.Http.HttpRequestMessage]::new(
+    'GET', $httpResponse.RequestMessage.RequestUri.AbsoluteUri);
 
-# Parsing "LastMRH" header from server response and adding to $httpRequest object
-# This is one of two headers that need to be exchanged with every request/response handshake for authentication
-
-$httpRequest.Headers.Add(
-($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[0],
-($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[1]
-);
-
-# This is the second header, 'MRHSession', to be added tto $httpRequest
+## Parsing "LastMRH" header from server response and adding to $httpRequest object
+## This is one of two headers that need to be exchanged with every request/response handshake for authentication
 
 $httpRequest.Headers.Add(
-($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[0],
-($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[1]
+    ($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[0],
+    ($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[1]
 );
 
-# Second request sent to $webportal with 'LastMRH' and 'MRH' headers
+## This is the second header, 'MRHSession', to be added tto $httpRequest
+
+$httpRequest.Headers.Add(
+    ($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[0],
+    ($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[1]
+);
+
+## Second request sent to $webportal with 'LastMRH' and 'MRH' headers
 
 $httpResponse = $httpClient.SendAsync($httpRequest).Result
 
-# Second $httpRequest object; using 'POST' instead of 'GET' beacuse data need to be sent
-# to the server to get a specific response
+## Second $httpRequest object; using 'POST' instead of 'GET' beacuse data need to be sent
+## to the server to get a specific response
 
-$httpRequest = [System.Net.Http.HttpRequestMessage]::new('POST',$httpResponse.RequestMessage.RequestUri.AbsoluteUri);
+$httpRequest = [System.Net.Http.HttpRequestMessage]::new(
+    'POST',$httpResponse.RequestMessage.RequestUri.AbsoluteUri);
 
-# adding LastMRH Header
-
-$httpRequest.Headers.Add(
-($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[0],
-($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[1]
-);
-
-# adding MRHSession header
+## adding LastMRH Header
 
 $httpRequest.Headers.Add(
-($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[0],
-($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[1]
+    ($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[0],
+    ($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[1]
 );
 
-# creating $httpContent object with payload to send data to server necessary to proceed
+## adding MRHSession header
+
+$httpRequest.Headers.Add(
+    ($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[0],
+    ($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[1]
+);
+
+## creating $httpContent object with payload to send data to server necessary to proceed
 
 $body = 'choice=1';
 $httpContent = [System.Net.Http.StringContent]::new(
@@ -140,41 +142,68 @@ $body,
 'application/x-www-form-urlencoded'
 );
 
-# appending $httpContent to $httpRequest
+## appending $httpContent to $httpRequest
 
 $httpRequest.Content = $httpContent;
 
-# Sending POST request that will active JS within webpage to prompt user for smart card pin
+## Sending POST request that will active JS within webpage to prompt user for smart card pin
 
 $httpResponse = $httpClient.SendAsync($httpRequest);
 
-# My attempt to have the console wait for the user to input pin (not sure how well it works yet)
+## My attempt to have the console wait for the user to input pin (not sure how well it works yet)
 
 try{$httpResponse.wait()}
 catch{};
 
-# attempt at forcing script to resend request on failure (i.e. user took too long to enter PIN)
+## attempt at forcing script to resend request on failure (i.e. user took too long to enter PIN)
 
 if($httpResponse.Stats -eq 'Faulted'){
-do{
-[System.Console]::WriteLine("`r`nRequest timed out.`r`n`r`nRetrying...`r`n");
-sleep 2;
-$httpResponse = $httpClient.GetAsync($webPortal).Result;
+    do{
+        [System.Console]::WriteLine("`r`nRequest timed out.`r`n`r`nRetrying...`r`n");
+        sleep 2;
+        $httpResponse = $httpClient.GetAsync($webPortal).Result;
 
-$httpRequest = [System.Net.Http.HttpRequestMessage]::new('GET',$httpResponse.RequestMessage.RequestUri.AbsoluteUri);
+        $httpRequest = [System.Net.Http.HttpRequestMessage]::new('GET',$httpResponse.RequestMessage.RequestUri.AbsoluteUri);
 
-$httpRequest.Headers.Add(
-($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[0],
-($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[1]
-);
+        $httpRequest.Headers.Add(
+            ($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[0],
+            ($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'LastMRH'}).split('=')[1]
+        );
 
-$httpRequest.Headers.Add(
-($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[0],
-($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[1]
-);
+        $httpRequest.Headers.Add(
+            ($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[0],
+            ($httpResponse.Headers.GetValues('Set-Cookie').split(';') | ?{$_ -match 'MRHSession'}).split('=')[1]
+        );
 
-}
-}
+    };
+
+    until($httpResponse.Result.StatusCode -eq 'OK')
+};
 
 
-until($httpResponse.Result.StatusCode -eq 'OK')
+
+## Access to the Portal after this point
+
+## Created nested foreach loop with (if/elseif/else), (do/until), and (try/catch)
+## Goes through each circuit in the previous generated #ccsdList variable
+
+foreach ($circuit in $ccsdList){
+
+    ## Progress bar 
+    [int32]$Progress = (($validArray.count + $invalidArray.count)/$ccsdCount)*100;
+
+    ## Cmdlet that display progress of script
+    Write-Progress -Activity "Validating $circuit" -Status "Progress:" -PercentComplete $Progress;
+
+    $httpRequest = [System.Net.Http.HttpRequestMessage::new(
+        'GET', $webPortal + "?inpCCSD=$($circuit)");
+
+    ## try/catch to capture ASPSESSION and TS013be9b7 headers from previous response and add them to new request
+    ## necessary for asynchronous authentication
+    ## sometimes the response is empty and another request needs to be sent
+
+    try{
+        $httpRequest.Headers.Add(
+            ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'TS013b39b7'}) -split ';') -split '=')[0],
+    
+    
