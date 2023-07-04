@@ -253,3 +253,8 @@ foreach ($circuit in $ccsdList){
 		if ($httpResponse.Result.Content.ReadAsStringAsync().Resut.Contains($circuit)){
 
 				if ([regex]::Match($httpResponse.Result.ReadAsStringAsync().Result,$parentCCSDPattern).Success){
+						
+						## Array to hold parent circuits
+						$parentCCSDs = [System.Collections.Generic.List[System.Object]]@(); 
+
+
