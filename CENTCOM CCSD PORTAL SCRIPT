@@ -62,11 +62,11 @@ elseif ($fileBrowser.FileName -notmatch '.txt$'){
 ## Also creates a definitive list that removes duplicates from the original
 
 try{
-$rawCCSDList = [System.Collections.Generic.List[System.Object]]([System.IO.File]::ReadAllLines(
-    $fileBrowser.FileName));
-    $rawCCSDList.TrimExcess();
-    $ccsdList = $rawCCSDList | select -Unique
-    [int]$ccsdCount = $ccsdList.count;}
+	$rawCCSDList = [System.Collections.Generic.List[System.Object]]([System.IO.File]::ReadAllLines(
+    	$fileBrowser.FileName));
+    	$rawCCSDList.TrimExcess();
+    	$ccsdList = $rawCCSDList | select -Unique
+    	[int]$ccsdCount = $ccsdList.count;}
 catch{
     [System.Console]::BackgroundColor="Gray";
     [System.Console]::ForegroundColor="Red";
