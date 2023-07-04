@@ -195,15 +195,45 @@ foreach ($circuit in $ccsdList){
     ## Cmdlet that display progress of script
     Write-Progress -Activity "Validating $circuit" -Status "Progress:" -PercentComplete $Progress;
 
-    $httpRequest = [System.Net.Http.HttpRequestMessage::new(
+    $httpRequest = [System.Net.Http.HttpRequestMessage]::new(
         'GET', $webPortal + "?inpCCSD=$($circuit)");
 
     ## try/catch to capture ASPSESSION and TS013be9b7 headers from previous response and add them to new request
     ## necessary for asynchronous authentication
     ## sometimes the response is empty and another request needs to be sent
 
-    try{
+    try {
         $httpRequest.Headers.Add(
-            ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'TS013b39b7'}) -split ';') -split '=')[0],
-    
-    
+                (
+                    ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'ASPSESSION'}) -split ';') -split '=')[0],
+                    ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'ASPSESSION'}) -split ';') -split '=')[1]
+                )
+
+        );
+
+        $httpRequest.Headers.Add(
+                (
+                    ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'TS013be9b7'}) -split ';') -split '=')[0],
+                    ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'TS013be9b7'}) -split ';') -split '=')[1]
+                )
+        );
+    }
+
+            catch{};
+
+    if ($httpRequest.Headers.ToString() -eq ''){
+        do {$httpResponse = $httpClient.SendAsync(
+                $httpRequest.Headers.Add(
+                    (
+                        ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'ASPSESSION'}) -split ';') -split '=')[0],
+                        ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'ASPSESSION'}) -split ';') -split '=')[1]
+                    )
+
+                )
+
+                $httpRequest.Headers.Add(
+                    (
+                        ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'TS013be9b7'}) ';') -split '=')[0],
+                        ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'TS013be9b7'}) ';') -split '=')[1]
+                    )
+                )
