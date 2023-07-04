@@ -222,18 +222,36 @@ foreach ($circuit in $ccsdList){
             catch{};
 
     if ($httpRequest.Headers.ToString() -eq ''){
-        do {$httpResponse = $httpClient.SendAsync(
-                $httpRequest.Headers.Add(
-                    (
-                        ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'ASPSESSION'}) -split ';') -split '=')[0],
-                        ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'ASPSESSION'}) -split ';') -split '=')[1]
-                    )
+        do {
+						## Recreates httprequest until a reponse with the necessary headers is returned
+            $httpResponse = $httpClient.SendAsync($httpRequest);
+                
+            $httpRequest.Headers.Add(
+                (
+                    ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'ASPSESSION'}) -split ';') -split '=')[0],
+                    ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'ASPSESSION'}) -split ';') -split '=')[1]
+                )
+            );
 
+            $httpRequest.Headers.Add(
+                (
+                    ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'TS013be9b7'}) -split ';') -split '=')[0],
+                    ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'TS013be9b7'}) -split ';') -split '=')[1]
                 )
 
-                $httpRequest.Headers.Add(
-                    (
-                        ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'TS013be9b7'}) ';') -split '=')[0],
-                        ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'TS013be9b7'}) ';') -split '=')[1]
-                    )
-                )
+            );
+
+        }
+        until($httpRequest.Headers.toString() -ne '');
+        
+        
+    }
+
+		else {
+					## if headers were not empty, sends request as is
+					$httpResponse = $httpClient.SendAsync($httpRequest)
+		}
+
+		if ($httpResponse.Result.Content.ReadAsStringAsync().Resut.Contains($circuit)){
+
+				if ([regex]::Match($httpResponse.Result.ReadAsStringAsync().Result,$parentCCSDPattern).Success){
