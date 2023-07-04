@@ -238,15 +238,13 @@ foreach ($circuit in $ccsdList){
                     ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'TS013be9b7'}) -split ';') -split '=')[0],
                     ((($httpResponse.Result.Headers.GetValues('Set-Cookie') | ?{$_ -match 'TS013be9b7'}) -split ';') -split '=')[1]
                 )
-
             );
-
         }
         until($httpRequest.Headers.toString() -ne '');
         
         
     }
-
+		
 		else {
 					## if headers were not empty, sends request as is
 					$httpResponse = $httpClient.SendAsync($httpRequest)
